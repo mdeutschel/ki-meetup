@@ -46,6 +46,13 @@ export class SSEStreamingClient implements StreamingClient {
       this.eventSource.onmessage = (event) => {
         try {
           const streamEvent: StreamEvent = JSON.parse(event.data);
+          
+          // Handle configuration errors specifically
+          if (streamEvent.type === 'error' && (streamEvent.model === 'system' || streamEvent.data?.isConfigError)) {
+            this.onError(new Error(`Konfigurationsfehler: ${streamEvent.data?.error || 'Unbekannter Fehler'}\n\nBitte siehe ENVIRONMENT_SETUP.md für Setup-Anweisungen.`));
+            return;
+          }
+          
           this.onEvent(streamEvent);
         } catch (error) {
           console.error('Error parsing SSE message:', error);
@@ -54,7 +61,7 @@ export class SSEStreamingClient implements StreamingClient {
       };
 
       this.eventSource.onerror = (error) => {
-        console.error('SSE Error:', error);
+        console.error('SSE Connection Error. Siehe ENVIRONMENT_SETUP.md für API-Key Setup.');
         
         if (this.eventSource?.readyState === EventSource.CLOSED) {
           this.handleDisconnection();
@@ -172,11 +179,11 @@ export const StreamUtils = {
           break;
 
         case 'token':
-          onToken(event.data.delta, event.data.tokens, event.data.cost);
+          onToken(event.data.delta || '', event.data.tokens || { input: 0, output: 0, total: 0 }, event.data.cost || 0);
           break;
 
         case 'complete':
-          onComplete('', event.data.tokens, event.data.cost);
+          onComplete('', event.data.tokens || { input: 0, output: 0, total: 0 }, event.data.cost || 0);
           break;
 
         case 'error':
@@ -302,6 +309,12 @@ export const updateStreamState = (
   event: StreamEvent
 ): StreamState => {
   const modelKey = event.model;
+  
+  // Skip system messages in state updates - they're handled elsewhere
+  if (modelKey === 'system') {
+    return state;
+  }
+  
   const newState = { ...state };
 
   switch (event.type) {
@@ -317,9 +330,9 @@ export const updateStreamState = (
     case 'token':
       newState[modelKey] = {
         ...newState[modelKey],
-        content: newState[modelKey].content + event.data.delta,
-        tokens: event.data.tokens,
-        cost: event.data.cost,
+        content: newState[modelKey].content + (event.data.delta || ''),
+        tokens: event.data.tokens || { input: 0, output: 0, total: 0 },
+        cost: event.data.cost || 0,
       };
       break;
 
@@ -327,8 +340,8 @@ export const updateStreamState = (
       newState[modelKey] = {
         ...newState[modelKey],
         isStreaming: false,
-        tokens: event.data.tokens,
-        cost: event.data.cost,
+        tokens: event.data.tokens || { input: 0, output: 0, total: 0 },
+        cost: event.data.cost || 0,
       };
       break;
 

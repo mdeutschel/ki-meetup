@@ -5,22 +5,30 @@ import { type ModelConfig, type ModelProvider } from "@/types";
 
 // Model Factory für OpenAI Models
 export const createOpenAIModel = (modelName: string) => {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY ist nicht gesetzt. Bitte füge deinen API-Key in .env.local hinzu.');
+  }
+  
   return new ChatOpenAI({
     model: modelName,
     streaming: true,
     openAIApiKey: process.env.OPENAI_API_KEY,
-    maxTokens: -1, // Use model default
+    maxTokens: 4000, // Set reasonable default, models can handle more if needed
     temperature: 0.7,
   });
 };
 
 // Model Factory für Anthropic Models
 export const createAnthropicModel = (modelName: string) => {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY ist nicht gesetzt. Bitte füge deinen API-Key in .env.local hinzu.');
+  }
+  
   return new ChatAnthropic({
     model: modelName,
     streaming: true,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    maxTokens: -1, // Use model default
+    maxTokens: 4000, // Anthropic requires positive value, set reasonable default
     temperature: 0.7,
   });
 };

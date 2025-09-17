@@ -333,10 +333,24 @@ const CostEfficiencyAnalysis: React.FC<{
   model1Name: string;
   model2Name: string;
 }> = ({ cost1, cost2, model1Name, model2Name }) => {
+  // Validate costs to avoid division by zero
+  const isValidCost = (cost: CostCalculation) => 
+    cost.totalCost > 0 && cost.outputTokens > 0 && 
+    !isNaN(cost.totalCost) && !isNaN(cost.outputTokens);
+  
+  if (!isValidCost(cost1) || !isValidCost(cost2)) {
+    return null; // Don't show efficiency analysis with incomplete data
+  }
+  
   const efficiency1 = cost1.outputTokens / cost1.totalCost;
   const efficiency2 = cost2.outputTokens / cost2.totalCost;
   const moreEfficient = efficiency1 > efficiency2 ? model1Name : model2Name;
   const efficiencyDiff = Math.abs(efficiency1 - efficiency2);
+  
+  // Additional validation for calculated values
+  if (isNaN(efficiency1) || isNaN(efficiency2) || isNaN(efficiencyDiff)) {
+    return null;
+  }
 
   return (
     <Card sx={{ mt: 3 }} variant="outlined">

@@ -79,43 +79,41 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                 <em>Kein Model ausgewählt</em>
               </MenuItem>
               
-              {MODEL_PROVIDERS.map(provider => (
-                <Box key={provider.id}>
-                  <MenuItem disabled sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                    {provider.name}
-                  </MenuItem>
-                  {provider.models
-                    .filter(model => availableModels.some(am => am.id === model.id))
-                    .map(model => (
-                      <MenuItem 
-                        key={model.id} 
-                        value={model.id}
-                        sx={{ pl: 4 }}
-                      >
-                        <Box display="flex" alignItems="center" gap={2} width="100%">
-                          <Avatar 
-                            sx={{ 
-                              width: 24, 
-                              height: 24, 
-                              bgcolor: provider.id === 'openai' ? 'success.main' : 'secondary.main',
-                              fontSize: 12
-                            }}
-                          >
-                            {provider.name.charAt(0)}
-                          </Avatar>
-                          <Box flexGrow={1}>
-                            <Typography variant="body2" fontWeight={500}>
-                              {model.displayName}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatCost(model.pricing.input)}/{formatCost(model.pricing.output)} per 1K tokens
-                            </Typography>
-                          </Box>
+              {MODEL_PROVIDERS.flatMap(provider => [
+                <MenuItem key={`${provider.id}-header`} disabled sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                  {provider.name}
+                </MenuItem>,
+                ...provider.models
+                  .filter(model => availableModels.some(am => am.id === model.id))
+                  .map(model => (
+                    <MenuItem 
+                      key={model.id} 
+                      value={model.id}
+                      sx={{ pl: 4 }}
+                    >
+                      <Box display="flex" alignItems="center" gap={2} width="100%">
+                        <Avatar 
+                          sx={{ 
+                            width: 24, 
+                            height: 24, 
+                            bgcolor: provider.id === 'openai' ? 'success.main' : 'secondary.main',
+                            fontSize: 12
+                          }}
+                        >
+                          {provider.name.charAt(0)}
+                        </Avatar>
+                        <Box flexGrow={1}>
+                          <Typography variant="body2" fontWeight={500}>
+                            {model.displayName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatCost(model.pricing.input)}/{formatCost(model.pricing.output)} per 1K tokens
+                          </Typography>
                         </Box>
-                      </MenuItem>
-                    ))}
-                </Box>
-              ))}
+                      </Box>
+                    </MenuItem>
+                  ))
+              ])}
             </Select>
           </FormControl>
 

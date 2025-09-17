@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { HumanMessage } from "@langchain/core/messages";
 import { createModelInstance, getModelConfig, parseTokenUsage } from "@/lib/models";
 import { calculateLiveCost } from "@/lib/pricing";
+import { countTokens, createTokenUsage, estimateInputTokens } from "@/lib/tokenizer";
 import { PrismaClient } from "@prisma/client";
 import { type StreamEvent, type StreamResponse } from "@/types";
 
@@ -40,8 +41,24 @@ export async function GET(request: NextRequest) {
     async start(controller) {
       try {
         // Models initialisieren
-        const model1Instance = createModelInstance(model1Id);
-        const model2Instance = createModelInstance(model2Id);
+        let model1Instance, model2Instance;
+        
+        try {
+          model1Instance = createModelInstance(model1Id);
+          model2Instance = createModelInstance(model2Id);
+        } catch (error) {
+          // Send error event for API key issues
+          sendEvent(controller, {
+            type: 'error',
+            model: 'system',
+            data: {
+              error: error instanceof Error ? error.message : 'Fehler beim Initialisieren der Models',
+              isConfigError: true,
+            }
+          });
+          controller.close();
+          return;
+        }
 
         const message = new HumanMessage(prompt);
 
@@ -161,11 +178,14 @@ async function streamModel(
 ): Promise<{ content: string; tokens: any; cost: number }> {
   
   let fullContent = '';
-  let tokenCount = 0;
   let inputTokens = 0;
   let outputTokens = 0;
 
   try {
+    // Input tokens mit tiktoken zählen
+    const messageText = typeof message.content === 'string' ? message.content : String(message.content);
+    inputTokens = estimateInputTokens(messageText, modelId);
+    
     // Stream starten
     const stream = await modelInstance.stream([message]);
 
@@ -174,10 +194,11 @@ async function streamModel(
       
       if (delta) {
         fullContent += delta;
-        tokenCount++;
-        outputTokens++;
+        
+        // Output tokens präzise mit tiktoken zählen
+        outputTokens = countTokens(fullContent, modelId);
 
-        // Live-Kosten berechnen (Schätzung basierend auf bisherigen Tokens)
+        // Live-Kosten berechnen (präzise basierend auf tiktoken)
         const liveCost = calculateLiveCost(inputTokens, outputTokens, modelId);
 
         // Token-Event senden

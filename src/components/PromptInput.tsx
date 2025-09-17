@@ -29,6 +29,7 @@ import {
 import { type PromptInputProps } from '@/types';
 import { estimatePromptCost, formatCost, formatTokens } from '@/lib/pricing';
 import { getModelConfig } from '@/lib/models';
+import { getApproximateTokenCount } from '@/lib/tokenizer';
 
 const PromptInput: React.FC<PromptInputProps> = ({
   value,
@@ -38,12 +39,14 @@ const PromptInput: React.FC<PromptInputProps> = ({
   error,
 }) => {
   const [charCount, setCharCount] = useState(0);
+  const [tokenCount, setTokenCount] = useState(0);
   const [showEstimate, setShowEstimate] = useState(false);
   const textFieldRef = useRef<HTMLTextAreaElement>(null);
 
-  // Character count tracking
+  // Character and token count tracking
   useEffect(() => {
     setCharCount(value.length);
+    setTokenCount(getApproximateTokenCount(value));
     setShowEstimate(value.length > 50);
   }, [value]);
 
@@ -96,10 +99,17 @@ const PromptInput: React.FC<PromptInputProps> = ({
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Chip
-                  label={`${charCount}/${maxChars}`}
+                  label={`${charCount}/${maxChars} chars`}
                   size="small"
                   color={isOverLimit ? 'error' : isNearLimit ? 'warning' : 'default'}
                   variant="outlined"
+                />
+                <Chip
+                  label={`${formatTokens(tokenCount)} tokens`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  icon={<Speed />}
                 />
                 <Tooltip title="Zwischenablage einfügen">
                   <IconButton size="small" onClick={handlePaste}>

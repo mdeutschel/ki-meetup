@@ -1,5 +1,6 @@
 import { type TokenUsage, type CostCalculation, type ModelConfig } from "@/types";
 import { getModelConfig } from "./models";
+import { countTokens } from "./tokenizer";
 
 // Aktuelle Model-Preise (Stand September 2024)
 // Preise sind in USD per 1K Tokens
@@ -85,20 +86,20 @@ export function formatTokens(tokens: number): string {
 }
 
 /**
- * Berechnet geschätzte Kosten für einen Prompt (Schätzung)
+ * Berechnet geschätzte Kosten für einen Prompt mit tiktoken
  */
 export function estimatePromptCost(
   promptText: string,
   modelId: string,
   estimatedResponseTokens: number = 500
 ): CostCalculation {
-  // Grobe Schätzung: ~4 characters per token für englischen Text
-  const estimatedInputTokens = Math.ceil(promptText.length / 4);
+  // Präzise Token-Zählung mit tiktoken
+  const inputTokens = countTokens(promptText, modelId);
   
   const tokenUsage: TokenUsage = {
-    input: estimatedInputTokens,
+    input: inputTokens,
     output: estimatedResponseTokens,
-    total: estimatedInputTokens + estimatedResponseTokens,
+    total: inputTokens + estimatedResponseTokens,
   };
   
   return calculateCost(tokenUsage, modelId);

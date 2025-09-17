@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Stack, Alert, Snackbar } from '@mui/material';
 import { AppLayout, PageHeader } from '@/components/ui/AppLayout';
 import { DualModelSelector, ModelComparison } from '@/components/ModelSelector';
@@ -31,6 +31,7 @@ export default function Home() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [sessionCosts, setSessionCosts] = useState<Array<{ modelName: string; cost: number; timestamp: Date }>>([]);
   const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' | 'info' } | null>(null);
+  const streamingClientRef = useRef<ReturnType<typeof createStreamingClient> | null>(null);
 
   // Load history on mount
   useEffect(() => {
@@ -53,15 +54,41 @@ export default function Home() {
 
   // Handle streaming events
   const handleStreamEvent = (event: StreamEvent) => {
-    setStreamState(prevState => updateStreamState(prevState, event));
+    setStreamState(prevState => {
+      const newState = updateStreamState(prevState, event);
+      
+      // Check if both models are complete after this update
+      if (event.type === 'complete') {
+        const model1Complete = event.model === 'model1' || !newState.model1.isStreaming;
+        const model2Complete = event.model === 'model2' || !newState.model2.isStreaming;
+        
+        if (model1Complete && model2Complete && !newState.isAnyStreaming) {
+          // Both models completed - stop streaming and show success
+          setTimeout(() => {
+            if (streamingClientRef.current) {
+              streamingClientRef.current.stopStream();
+              streamingClientRef.current = null;
+            }
+            setIsSubmitting(false);
+            loadHistory();
+            setNotification({
+              message: 'Vergleich erfolgreich abgeschlossen!',
+              severity: 'success'
+            });
+          }, 100); // Small delay to ensure state is updated
+        }
+      }
+      
+      return newState;
+    });
 
     // Track costs when streaming completes
-    if (event.type === 'complete') {
+    if (event.type === 'complete' && event.data.model && typeof event.data.cost === 'number') {
       const modelConfig = getModelConfig(event.data.model);
       if (modelConfig) {
         setSessionCosts(prev => [...prev, {
           modelName: modelConfig.displayName,
-          cost: event.data.cost,
+          cost: event.data.cost as number, // Type assertion since we checked above
           timestamp: new Date(),
         }]);
       }
@@ -76,6 +103,11 @@ export default function Home() {
         severity: 'error'
       });
       return;
+    }
+
+    // Stop any existing streaming
+    if (streamingClientRef.current) {
+      streamingClientRef.current.stopStream();
     }
 
     setIsSubmitting(true);
@@ -102,27 +134,15 @@ export default function Home() {
             severity: 'error'
           });
           setIsSubmitting(false);
+          streamingClientRef.current = null;
         }
       });
 
+      streamingClientRef.current = streamingClient;
       streamingClient.startStream(result.data.streamUrl);
 
-      // Auto-stop streaming after responses complete
-      const checkCompletion = () => {
-        if (!streamState.isAnyStreaming && (streamState.model1.content || streamState.model2.content)) {
-          streamingClient.stopStream();
-          setIsSubmitting(false);
-          loadHistory(); // Refresh history
-          setNotification({
-            message: 'Vergleich erfolgreich abgeschlossen!',
-            severity: 'success'
-          });
-        } else if (streamState.isAnyStreaming) {
-          setTimeout(checkCompletion, 1000);
-        }
-      };
-
-      setTimeout(checkCompletion, 1000);
+      // Note: Auto-completion will be handled by the stream event handlers
+      // No need for polling-based completion checking
 
     } catch (error) {
       setNotification({

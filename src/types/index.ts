@@ -46,18 +46,19 @@ export interface TokenUsage {
 
 // Streaming Types
 export interface StreamResponse {
-  id: string;
-  model: string;
-  delta: string;
-  tokens: TokenUsage;
-  cost: number;
-  isComplete: boolean;
+  id?: string;
+  model?: string;
+  delta?: string;
+  tokens?: TokenUsage;
+  cost?: number;
+  isComplete?: boolean;
   error?: string;
+  isConfigError?: boolean; // Flag for configuration errors (missing API keys, etc.)
 }
 
 export interface StreamEvent {
   type: 'start' | 'token' | 'complete' | 'error';
-  model: 'model1' | 'model2';
+  model: 'model1' | 'model2' | 'system'; // Allow system for configuration errors
   data: StreamResponse;
 }
 
