@@ -1,0 +1,263 @@
+---
+description: AI-optimized workplan protocol for complex multi-file changes
+alwaysApply: false
+---
+
+# AI Workplan Protocol v2
+
+## Trigger: Änderungen >1 Datei oder Komplexität >trivial
+Location: `.cursor/workplans/in-progress/workplan-$(date +%Y-%m-%d-%H%M)-[kebab-case-description].md`
+
+## Enhanced Template
+
+```markdown
+# [Project Title] - $(date '+%Y-%m-%d %H:%M')
+- Datum: date '+%Y-%m-%d' (nie hardcoded)
+
+## Context & Objective
+**Goal**: [Single sentence describing desired end state]
+**Success Criteria**: [Measurable outcome that validates completion]
+**Constraints**: [Technical/business limitations if any]
+**Dependencies**: [External systems, APIs, libraries required]
+
+## Architecture Decision
+**Approach**: [Brief rationale for chosen solution]
+**Alternatives Considered**: [Other options and why rejected]
+**Trade-offs**: [What we're optimizing for vs accepting]
+
+## Implementation Steps
+
+### Phase 1: Foundation
+- [ ] **Step 1.1**: [Atomic task]
+  - Input: [Required data/state]
+  - Action: [Specific implementation]
+  - Output: [Expected result]
+  - Validation: [How to verify success]
+  - Rollback: [How to undo if needed]
+
+- [ ] **Step 1.2**: [Atomic task]
+  - Input: [Required data/state]
+  - Action: [Specific implementation]
+  - Output: [Expected result]
+  - Validation: [How to verify success]
+  - Rollback: [How to undo if needed]
+
+### Phase 2: Core Implementation
+- [ ] **Step 2.1**: [Atomic task]
+  - Input: [Required data/state]
+  - Action: [Specific implementation]
+  - Output: [Expected result]
+  - Validation: [How to verify success]
+  - Rollback: [How to undo if needed]
+
+### Phase 3: Testing & Validation
+- [ ] **Step 3.1**: [Atomic task]
+  - Input: [Required data/state]
+  - Action: [Specific implementation]
+  - Output: [Expected result]
+  - Validation: [How to verify success]
+  - Rollback: [How to undo if needed]
+
+## File Matrix
+| File Path | Purpose | Operations | Dependencies |
+|-----------|---------|------------|--------------|
+| `src/api/handler.ts` | API endpoint | CREATE/MODIFY | Step 1.1, 2.3 |
+| `tests/api.test.ts` | Test coverage | CREATE | Step 3.1 |
+| `src/types/index.ts` | Type definitions | MODIFY | Step 1.2 |
+
+## Risk Mitigation
+| Risk | Likelihood | Impact | Mitigation Strategy |
+|------|------------|--------|-------------------|
+| Breaking existing functionality | Medium | High | Comprehensive test coverage before changes |
+| Performance degradation | Low | Medium | Benchmark critical paths |
+| Dependency conflicts | Low | High | Lock versions, test in isolated env |
+
+## Validation Checkpoints
+### Pre-Implementation
+- [ ] All dependencies available
+- [ ] Test data prepared
+- [ ] Backup/branch created
+- [ ] Development environment ready
+
+### Per-Step Validation
+- [ ] Unit tests pass for modified code
+- [ ] No regression in existing features
+- [ ] Performance metrics within bounds
+- [ ] Linting/formatting rules satisfied
+
+### Final Validation
+- [ ] Integration tests pass
+- [ ] End-to-end tests successful
+- [ ] Code review checklist complete
+- [ ] Documentation updated
+- [ ] Security scan passed
+
+## Progress Tracking
+- Started: $(date '+%Y-%m-%d %H:%M')
+- Phase 1: ⏳ In Progress
+- Phase 2: ⬜ Not Started
+- Phase 3: ⬜ Not Started
+- Completed: [timestamp when done]
+- Total Effort: [hours]
+
+## Post-Implementation
+- [ ] Monitoring configured
+- [ ] Rollback plan documented
+- [ ] Team knowledge transfer completed
+- [ ] Release notes updated
+- [ ] Archived to `completed/` folder
+```
+
+## Execution Protocol
+
+### 1. **Initialization Phase**
+- AI validates all prerequisites before starting
+- Checks for conflicting work in progress
+- Creates feature branch with descriptive name
+- Sets up isolated test environment
+
+### 2. **Incremental Progress**
+- Each step completed and tested independently
+- Commit after each successful step with descriptive message
+- Update workplan status in real-time
+- Document any deviations or discoveries
+
+### 3. **Checkpoint Sync**
+- After each phase, full system validation
+- Run regression test suite
+- Verify no performance degradation
+- Check for security vulnerabilities
+
+### 4. **Error Handling**
+- Explicit rollback to last stable state on failure
+- Document failure reason and attempted fixes
+- Create issue ticket for unresolved problems
+- Notify relevant stakeholders if blocked
+
+### 5. **Documentation**
+- Inline comments for complex logic
+- README updates per feature addition
+- API documentation for new endpoints
+- Update architectural decision records (ADRs)
+
+## AI-Specific Instructions
+
+### Context Management
+- Each step must be completable in single context window (~4000 tokens)
+- Include relevant code snippets in step description
+- Reference line numbers for precise modifications
+- Provide before/after examples for clarity
+
+### Code Specifications
+- Specify exact import statements and package versions
+- Include type signatures for all functions
+- Define interfaces for data structures
+- Provide error handling patterns to follow
+
+### Testing Requirements
+- Include example test cases with expected outputs
+- Define edge cases to handle
+- Specify mock data structure
+- List assertion patterns to use
+
+### Debugging Helpers
+- Define expected error messages for common issues
+- Include console.log checkpoints for verification
+- Provide fallback strategies for external dependencies
+- List known gotchas and workarounds
+
+## Workflow Commands
+
+### Creating New Workplan
+```bash
+# Generate workplan with timestamp
+echo "workplan-$(date +%Y-%m-%d-%H%M)-feature-name.md"
+
+# Create in correct directory
+mkdir -p .cursor/workplans/in-progress/
+touch .cursor/workplans/in-progress/workplan-$(date +%Y-%m-%d-%H%M)-feature-name.md
+```
+
+### Status Updates
+```bash
+# Mark step complete
+sed -i 's/- \[ \] \*\*Step X/- \[x\] \*\*Step X/' workplan.md
+
+# Update phase status
+sed -i 's/Phase 1: ⏳ In Progress/Phase 1: ✅ Complete/' workplan.md
+```
+
+### Archiving Completed Work
+```bash
+# Move to completed folder
+mv .cursor/workplans/in-progress/workplan-*.md .cursor/workplans/completed/
+
+# Add completion timestamp
+echo "Completed: $(date '+%Y-%m-%d %H:%M')" >> workplan.md
+```
+
+## Quality Gates
+
+### Code Quality
+- [ ] No TODO comments remain
+- [ ] All console.logs removed
+- [ ] Error messages are user-friendly
+- [ ] Code follows style guide
+
+### Performance
+- [ ] Response time <200ms for API calls
+- [ ] Memory usage stable under load
+- [ ] Database queries optimized
+- [ ] No N+1 query problems
+
+### Security
+- [ ] Input validation implemented
+- [ ] Authentication checks in place
+- [ ] No sensitive data in logs
+- [ ] Dependencies vulnerability-free
+
+## Template Variables
+
+When creating a workplan, replace these placeholders:
+- `[Project Title]`: Descriptive name of the feature/fix
+- `[kebab-case-description]`: URL-safe version of title
+- `[Atomic task]`: Single, testable unit of work
+- `[Required data/state]`: Prerequisites for the step
+- `[Specific implementation]`: Exact code changes needed
+- `[Expected result]`: Measurable outcome
+- `[How to verify success]`: Test command or verification step
+- `[How to undo if needed]`: Rollback procedure
+
+## Best Practices
+
+### For AI Implementation
+1. Break complex logic into helper functions
+2. Use descriptive variable names for clarity
+3. Add type annotations for all parameters
+4. Include error boundaries for fault tolerance
+5. Implement progressive enhancement
+
+### For Code Organization
+1. Group related changes in same phase
+2. Database migrations before code changes
+3. Tests written before implementation (TDD)
+4. Documentation updates with code changes
+5. Performance optimizations as separate phase
+
+### For Risk Management
+1. Always have rollback strategy
+2. Test in staging before production
+3. Monitor for 24h after deployment
+4. Keep stakeholders informed of progress
+5. Document lessons learned
+
+## Completion Criteria
+
+A workplan is considered complete when:
+- ✅ All steps marked as done
+- ✅ All validation checkpoints passed
+- ✅ Documentation updated
+- ✅ Code reviewed and approved
+- ✅ Deployed successfully to production
+- ✅ Post-implementation tasks finished
+- ✅ Workplan archived with notes
